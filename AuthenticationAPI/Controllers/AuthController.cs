@@ -1,4 +1,5 @@
 using System.Net;
+using AuthenticationAPI.Extensions;
 using AuthenticationAPI.Models.Dtos;
 using AuthenticationAPI.Models.Requests;
 using AuthenticationAPI.Services;
@@ -25,21 +26,15 @@ namespace AuthenticationAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginUser(TokenRequest request, CancellationToken ct)
         {
-            var token = await authService.HandleTokenRequest(request, ct);
-
-            return Ok(token);
+            var result = await authService.HandleTokenRequest(request, ct);
+            return result.MatchApiResponse();
         }
 
         [HttpPost("login/refresh-token")]
         public async Task<IActionResult> LoginWithRefreshToken(RefreshTokenRequest request, CancellationToken ct)
         {
-            return await Task.FromResult(Ok());
-        }
-        
-        [HttpGet("Test")]
-        public IActionResult TestEndpoint()
-        {
-            return Problem();
+            var result = await authService.HandleRefreshTokenRequest(request, ct);
+            return result.MatchApiResponse();
         }
     }
 }

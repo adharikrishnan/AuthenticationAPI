@@ -1,8 +1,10 @@
 using System.Text;
+using System.Text.Json;
 using AuthenticationAPI.DataAccess;
 using AuthenticationAPI.Models.Configurations;
-using AuthenticationAPI.Models.Dtos;
 using AuthenticationAPI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -11,7 +13,7 @@ namespace AuthenticationAPI.Extensions;
 
 public static class ServiceExtensions
 {
-    public static void ConfigureDBContext(this IServiceCollection services, IConfiguration configuration)
+    public static void ConfigureDbContext(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<AuthDbContext>(opts =>
         {
@@ -30,7 +32,8 @@ public static class ServiceExtensions
 
     public static void SetupServices(this IServiceCollection services)
     {
-        services.AddSingleton<IIdentityHelperService, IdentityHelperService>();
+        services.AddSingleton<ITokenHelper, TokenHelper>();
+        services.AddSingleton<IPasswordHelper, PasswordHelper>();
         services.AddScoped<IAuthService, AuthService>();
     }
 
@@ -83,6 +86,25 @@ public static class ServiceExtensions
                 ValidIssuer = authConfiguration.Issuer,
                 ValidAudience = authConfiguration.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authConfiguration.SecretKey))
+            };
+
+            options.Events = new JwtBearerEvents()
+            {   
+                OnAuthenticationFailed = context =>
+                {
+                    var problem = new ProblemDetails
+                    {
+                        Title = "Authentication Failed",
+                        Status = StatusCodes.Status401Unauthorized,
+                        Detail = context.Exception.Message,
+                        Instance = context.HttpContext.Request.Path,
+                    };
+                    
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    context.Response.ContentType = "application/json";
+                    var json = JsonSerializer.Serialize(problem);
+                    return context.Response.WriteAsync(json);
+                }
             };
         });
 

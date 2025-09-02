@@ -8,6 +8,10 @@ namespace AuthenticationAPI.DataAccess;
 
 public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(options)
 {
+    private DbSet<User> Users => Set<User>();
+    private DbSet<Role> Roles => Set<Role>();
+    private DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AuthDbContext).Assembly);
@@ -48,19 +52,28 @@ public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(
         return created > 0;
     }
 
-    public async Task<RefreshToken?> GetRefreshTokenDataAsync(string refreshToken, CancellationToken ct)
+    public async Task<RefreshTokenDto?> GetRefreshTokenDataAsync(string refreshToken, CancellationToken ct)
         => await RefreshTokens
-            .Include(r => r.User)
-            .FirstOrDefaultAsync(r => r.Token == refreshToken, ct);
+            .Where(r => r.Token == refreshToken)
+            .Select(r => new RefreshTokenDto
+            {
+                RefreshToken = r.Token,
+                ExpiryOn = r.ExpiresOn,
+                UserId = r.UserId,
+                User = r.User.ToUserDto()
+            })
+            .FirstOrDefaultAsync(ct);
 
     public async Task<bool> UpdateRefreshTokenAsync(RefreshToken refreshToken, CancellationToken ct)
     {
-        RefreshTokens.Update(refreshToken);
+        RefreshTokens.Attach(refreshToken);
+        
+        Entry(refreshToken).Property(r => r.Token).IsModified = true;
+        Entry(refreshToken).Property(r => r.ExpiresOn).IsModified = true;
+        Entry(refreshToken).Property(r => r.UpdatedBy).IsModified = true;
+        Entry(refreshToken).Property(r => r.UpdatedAt).IsModified = true;
+        
         var updated = await SaveChangesAsync(ct);
         return updated > 0;
     }
-    
-    private DbSet<User> Users => Set<User>();
-    private DbSet<Role> Roles => Set<Role>();
-    private DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 }

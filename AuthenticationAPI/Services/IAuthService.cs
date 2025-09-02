@@ -9,9 +9,7 @@ public interface IAuthService
 {
     Task<Result> RegisterUserAsync(AddUserRequest request, CancellationToken ct);
 
-    Task<TokenResponse> HandleTokenRequest(TokenRequest request, CancellationToken ct);
-
-    bool VerifyPassword(UserDto user, TokenRequest request);
+    Task<Result<TokenResponse>> HandleTokenRequest(TokenRequest request, CancellationToken ct);
     
-    /*Task<ServiceResponse<TokenResponse>> HandleRefreshTokenRequest(RefreshTokenRequest request, CancellationToken ct);*/
+    Task<Result<TokenResponse>> HandleRefreshTokenRequest(RefreshTokenRequest request, CancellationToken ct);
 }

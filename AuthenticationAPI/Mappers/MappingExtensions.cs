@@ -29,13 +29,16 @@ public static class MappingExtensions
         };
     }
 
-    public static RefreshToken ToRefreshToken(this RefreshTokenDto tokenDto)
+    public static RefreshToken ToRefreshToken(this RefreshTokenDto refreshTokenDto, string? updatedBy = null)
     {
         return new RefreshToken()
         {
-            Token = tokenDto.RefreshToken,
-            UserId = tokenDto.UserId,
-            ExpiresOn = tokenDto.ExpiryOn
+            Id = refreshTokenDto.Id,
+            Token = refreshTokenDto.RefreshToken,
+            UserId = refreshTokenDto.UserId,
+            ExpiresOn = refreshTokenDto.ExpiryOn,
+            UpdatedAt = DateTime.UtcNow,
+            UpdatedBy = updatedBy ?? "System"
         };
     }
 }

@@ -7,55 +7,63 @@ using AuthenticationAPI.Models.Response;
 
 namespace AuthenticationAPI.Services;
 
-public class AuthService(AuthDbContext dbContext, IIdentityHelperService identityHelperService) : IAuthService
+public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPasswordHelper passwordHelper) : IAuthService
 {
     public async Task<Result> RegisterUserAsync(AddUserRequest request, CancellationToken ct)
     {
         if (await dbContext.UserExistsAsync(request.Username, ct))
         {
-            return new Result();
+            return new Result
+                ("USER_EXISTS", "User already exists", ErrorType.Conflict);
         }
-        string hashedPassword = identityHelperService.HashPassword(request.Password);
+        string hashedPassword = passwordHelper.HashPassword(request.Password);
+        
         await dbContext.AddUserAsync(request.ToUser(hashedPassword), ct);
         
         return new Result();
     }
 
-    public async Task<TokenResponse> HandleTokenRequest(TokenRequest request, CancellationToken ct)
+    public async Task<Result<TokenResponse>> HandleTokenRequest(TokenRequest request, CancellationToken ct)
     {
         UserDto? user = await dbContext.GetUserByUsernameAsync(request.Username, ct);
+
+        if (user is null)
+            return new Result<TokenResponse>
+                ("USER_NOT_FOUND", "User does not exist", ErrorType.NotFound);
+
+
+        if (!passwordHelper.VerifyPassword(user!.PasswordHash, request.Password))
+            return new Result<TokenResponse>
+                ("INVALID_PASSWORD" ,"Invalid Credentials", ErrorType.Unauthorized);
         
-        var refreshTokenDto = identityHelperService.GenerateRefreshToken();
+        var refreshTokenDto = tokenHelper.GenerateRefreshToken();
         refreshTokenDto.UserId = user.UserId;
         
         await dbContext.AddRefreshTokenAsync(refreshTokenDto.ToRefreshToken(), ct);
-        
-        var accessTokenDto = identityHelperService.GenerateJwtToken(user);
-        
-        return new TokenResponse()
-        {
-            AccessToken = accessTokenDto.AccessToken,
-            AccessTokenExpiry = accessTokenDto.ExpiryOn,
-            RefreshToken = refreshTokenDto.RefreshToken,
-            RefreshTokenExpiry = refreshTokenDto.ExpiryOn,
-        };
+
+        var accessTokenDto = tokenHelper.GenerateJwtToken(user);
+
+        return new Result<TokenResponse>(new TokenResponse(accessTokenDto, refreshTokenDto));
     }
 
-    public bool VerifyPassword(UserDto user, TokenRequest request)
-                => identityHelperService.VerifyPassword(user.PasswordHash, request.Password);
-
-    /*public async Task <ServiceResponse<TokenResponse>> HandleRefreshTokenRequest(RefreshTokenRequest request, CancellationToken ct)
+    public async Task <Result<TokenResponse>> HandleRefreshTokenRequest(RefreshTokenRequest request, CancellationToken ct)
     {
-        RefreshToken? refreshTokenDetails = await dbContext.GetRefreshTokenDataAsync(request.RefreshToken, ct);
+        RefreshTokenDto? refreshTokenDto = await dbContext.GetRefreshTokenDataAsync(request.RefreshToken, ct);
 
-        if (refreshTokenDetails is null)
+        if (refreshTokenDto is null)
         {
-            return new ServiceResponse<TokenResponse>(HttpStatusCode.Unauthorized, "Refresh token invalid.", true, null);
+            return new Result<TokenResponse>
+                ("INVALID_REFRESH_TOKEN", "Invalid Token", ErrorType.Unauthorized);
         }
-        await dbContext.UpdateRefreshTokenAsync(refreshTokenDetails, ct);
-
         
-        return await HandleTokenRequest(refreshTokenDetails.User.ToUserDto(), ct);
-    }*/
+        tokenHelper.UpdateRefreshToken(refreshTokenDto);
+        
+        await dbContext.UpdateRefreshTokenAsync(refreshTokenDto.ToRefreshToken(), ct);
+        
+        var accessTokenDto = tokenHelper.GenerateJwtToken(refreshTokenDto.User!);
+
+        return new Result<TokenResponse>(new TokenResponse(accessTokenDto, refreshTokenDto));
+    }
+    
 
 }

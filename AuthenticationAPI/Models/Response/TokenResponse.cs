@@ -1,32 +1,28 @@
 using System;
 using System.Text.Json.Serialization;
+using AuthenticationAPI.Models.Dtos;
 
 namespace AuthenticationAPI.Models.Response;
 
-public class TokenResponse
+public class TokenResponse(AccessTokenDto accessTokenDto, RefreshTokenDto refreshTokenDto)
 {
     /// <summary>
     /// The Access Token issued to the user after successful authentication.
     /// </summary>
-    /*[JsonPropertyName("accessToken")]*/
-    public required string AccessToken { get; set; }
-    
+    public string AccessToken { get; init; } = accessTokenDto.AccessToken;
+
     /// <summary>
     /// The time (in seconds) until the access token expires.
     /// </summary>
-    /*[JsonPropertyName("accessTokenExpiry")]*/
-    public DateTime AccessTokenExpiry { get; set; } 
+    public DateTime AccessTokenExpiry { get; init; } = accessTokenDto.ExpiryOn;
 
     /// <summary>
     /// The Refresh Token issued to the user to obtain a new access token after the current one expires.
     /// </summary>
-    /*[JsonPropertyName("refreshToken")]*/
-    public required string RefreshToken { get; set; }
-    
+    public string RefreshToken { get; init; } = refreshTokenDto.RefreshToken;
+
     /// <summary>
     /// The time (in seconds) until the refresh token expires.
     /// </summary>
-    /*[JsonPropertyName("refreshTokenExpiry")]*/
-    public DateTime RefreshTokenExpiry { get; set; }
-
+    public DateTime RefreshTokenExpiry { get; init; } = refreshTokenDto.ExpiryOn;
 }

@@ -4,26 +4,22 @@ using System.Security.Cryptography;
 using System.Text;
 using AuthenticationAPI.Models.Configurations;
 using AuthenticationAPI.Models.Dtos;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthenticationAPI.Services;
 
-public class IdentityHelperService(AuthConfiguration authConfiguration) : IIdentityHelperService
-{
-    public string HashPassword(string password)
+public class TokenHelper(AuthConfiguration authConfiguration) : ITokenHelper
+{ 
+    
+    private (string Token, DateTime Expiry) GenerateTokenAndExpiry()
     {
-        // Using the default Password Hasher Implementation (does not use the supplied IUser
-        //  type properties for hashing). So using an empty string here.  
-        string passwordHash = new PasswordHasher<string>().HashPassword(string.Empty, password);
-        return passwordHash;
-    }
+        string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        DateTime expiry = DateTime.UtcNow
+            .AddDays(authConfiguration.RefreshTokenConfig.ExpiryDays)
+            .AddHours(authConfiguration.RefreshTokenConfig.ExpiryHours)
+            .AddMinutes(authConfiguration.RefreshTokenConfig.ExpiryMinutes);
 
-    public bool VerifyPassword(string passwordHash, string password)
-    {
-        // Same as in the HashPassword Method.
-        return new PasswordHasher<string>()
-        .VerifyHashedPassword(string.Empty, passwordHash, password) == PasswordVerificationResult.Success;
+        return (token, expiry);
     }
 
     public AccessTokenDto GenerateJwtToken(UserDto user)
@@ -59,17 +55,19 @@ public class IdentityHelperService(AuthConfiguration authConfiguration) : IIdent
 
     public RefreshTokenDto GenerateRefreshToken()
     {
-        string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        DateTime expiry = DateTime.UtcNow
-                                .AddDays(authConfiguration.RefreshTokenConfig.ExpiryDays)
-                                .AddHours(authConfiguration.RefreshTokenConfig.ExpiryHours)
-                                .AddMinutes(authConfiguration.RefreshTokenConfig.ExpiryMinutes);
-
+        var (token , expiry) = GenerateTokenAndExpiry();
         return new RefreshTokenDto()
         {
             RefreshToken = token,
             ExpiryOn = expiry,
         };
+    }
+
+    public void UpdateRefreshToken(RefreshTokenDto refreshToken)
+    {
+        var (token , expiry) = GenerateTokenAndExpiry();
+        refreshToken.RefreshToken = token;
+        refreshToken.ExpiryOn = expiry;
     }
 
 }
