@@ -366,5 +366,3 @@ FodyWeavers.xsd
 .idea*/
 
 *.sqlite
-
-*.db
