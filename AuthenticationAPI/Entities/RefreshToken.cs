@@ -12,7 +12,7 @@ public class RefreshToken
     
     public DateTime ExpiresOn { get; init; }
     
-    public bool IsRevoked { get; init; } =  false;
+    public bool IsRevoked { get; set; } =  false;
         
     public DateTime CreatedAt { get; init; }
     

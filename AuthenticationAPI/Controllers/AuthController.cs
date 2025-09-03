@@ -1,4 +1,3 @@
-using System.Net;
 using AuthenticationAPI.Extensions;
 using AuthenticationAPI.Models.Requests;
 using AuthenticationAPI.Services;
@@ -11,7 +10,7 @@ namespace AuthenticationAPI.Controllers
     [ApiController]
     public class AuthController(IAuthService authService) : ControllerBase
     {
-        /*[Authorize(Roles = "Admin")]*/
+        [Authorize(Roles = "Admin")]
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser(AddUserRequest request, CancellationToken ct)
         {
@@ -31,6 +30,14 @@ namespace AuthenticationAPI.Controllers
         {
             var result = await authService.HandleRefreshTokenRequest(request, ct);
             return result.MatchApiResponse();
+        }
+        
+        [Authorize]
+        [HttpPut("login/revoke-token")]
+        public async Task<IActionResult> RevokeRefreshToken(RefreshTokenRequest request ,CancellationToken ct)
+        {
+            var result = await authService.RevokeRefreshToken(request, ct);
+            return result.MatchApiResponse("Refresh Token Revoked.");
         }
     }
 }

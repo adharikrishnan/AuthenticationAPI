@@ -64,6 +64,15 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
 
         return new Result<TokenResponse>(new TokenResponse(accessTokenDto, refreshTokenDto));
     }
-    
 
+    public async Task<Result> RevokeRefreshToken(RefreshTokenRequest request, CancellationToken ct)
+    {
+        var revoked = await dbContext.RevokeRefreshToken(request.RefreshToken, ct);
+        
+        if(!revoked)
+            return new Result
+                ("INVALID_REFRESH_TOKEN", "Refresh Token is invalid", ErrorType.NotFound);
+
+        return new Result();
+    }
 }

@@ -75,7 +75,17 @@ public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(
         Entry(refreshToken).Property(r => r.UpdatedBy).IsModified = true;
         Entry(refreshToken).Property(r => r.UpdatedAt).IsModified = true;
         
-        var updated = await SaveChangesAsync(ct);
-        return updated > 0;
+        return await SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task<bool> RevokeRefreshToken(string refreshToken, CancellationToken ct)
+    {
+        var refreshTokenEntry = await RefreshTokens.AsTracking().FirstOrDefaultAsync(r => r.Token == refreshToken, ct);
+
+        if (refreshTokenEntry != null) return false;
+
+        refreshTokenEntry!.IsRevoked = true;
+        
+        return  await SaveChangesAsync(ct) > 0;
     }
 }

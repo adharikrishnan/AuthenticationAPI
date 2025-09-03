@@ -12,4 +12,6 @@ public interface IAuthService
     Task<Result<TokenResponse>> HandleTokenRequest(TokenRequest request, CancellationToken ct);
     
     Task<Result<TokenResponse>> HandleRefreshTokenRequest(RefreshTokenRequest request, CancellationToken ct);
+    
+    Task<Result> RevokeRefreshToken(RefreshTokenRequest request, CancellationToken ct);
 }
