@@ -2,7 +2,7 @@ using AuthenticationAPI.Enums;
 
 namespace AuthenticationAPI.Models.Requests;
 
-public sealed record class AddUserRequest
+public sealed record AddUserRequest
 {
     public required string Username { get; init; }
     

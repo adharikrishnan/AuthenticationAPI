@@ -11,6 +11,8 @@ public class RefreshToken
     public User User { get; init; } = null!;
     
     public DateTime ExpiresOn { get; init; }
+    
+    public bool IsRevoked { get; init; } =  false;
         
     public DateTime CreatedAt { get; init; }
     

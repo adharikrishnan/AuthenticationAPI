@@ -6,10 +6,11 @@ public class RefreshTokenDto
     
     public required string RefreshToken { get; set; }
     
+    public required DateTime ExpiryOn { get; set; }
+    
+    public bool IsRevoked { get; init; }
+    
     public int UserId { get; set; }
     
     public UserDto? User { get; init; } 
-
-    public required DateTime ExpiryOn { get; set; }
-    
 }

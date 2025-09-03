@@ -1,6 +1,6 @@
 namespace AuthenticationAPI.Models.Requests;
 
-public class TokenRequest
+public sealed record TokenRequest
 {
     public required string Username { get; set; }
 

@@ -57,8 +57,10 @@ public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(
             .Where(r => r.Token == refreshToken)
             .Select(r => new RefreshTokenDto
             {
+                Id = r.Id,
                 RefreshToken = r.Token,
                 ExpiryOn = r.ExpiresOn,
+                IsRevoked = r.IsRevoked,
                 UserId = r.UserId,
                 User = r.User.ToUserDto()
             })

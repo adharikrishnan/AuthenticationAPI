@@ -367,3 +367,5 @@ FodyWeavers.xsd
 
 *.sqlite
 *.db
+
+db_reset.sh

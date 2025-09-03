@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddLogging();
 builder.Services.SetupSwagger();
 builder.Services.AddControllers();
 builder.Services.ConfigureDbContext(builder.Configuration);

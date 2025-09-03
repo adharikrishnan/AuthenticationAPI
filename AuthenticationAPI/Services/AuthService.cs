@@ -11,7 +11,7 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
 {
     public async Task<Result> RegisterUserAsync(AddUserRequest request, CancellationToken ct)
     {
-        if (await dbContext.UserExistsAsync(request.Username, ct))
+        if (await dbContext.UserExistsAsync(request.Username.Trim(), ct))
         {
             return new Result
                 ("USER_EXISTS", "User already exists", ErrorType.Conflict);
@@ -48,9 +48,9 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
 
     public async Task <Result<TokenResponse>> HandleRefreshTokenRequest(RefreshTokenRequest request, CancellationToken ct)
     {
-        RefreshTokenDto? refreshTokenDto = await dbContext.GetRefreshTokenDataAsync(request.RefreshToken, ct);
+        var refreshTokenDto = await dbContext.GetRefreshTokenDataAsync(request.RefreshToken, ct);
 
-        if (refreshTokenDto is null)
+        if (refreshTokenDto is null || refreshTokenDto.ExpiryOn < DateTime.UtcNow || refreshTokenDto.IsRevoked)
         {
             return new Result<TokenResponse>
                 ("INVALID_REFRESH_TOKEN", "Invalid Token", ErrorType.Unauthorized);
