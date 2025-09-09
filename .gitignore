@@ -365,6 +365,10 @@ FodyWeavers.xsd
 # Ignore Rider Generated Files
 .idea*/
 
+# VS Code
+.vscode/
+
+# Project Specific
 *.sqlite
 *.db
 
