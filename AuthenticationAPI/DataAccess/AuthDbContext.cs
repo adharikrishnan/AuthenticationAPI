@@ -82,10 +82,15 @@ public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(
     {
         var refreshTokenEntry = await RefreshTokens.AsTracking().FirstOrDefaultAsync(r => r.Token == refreshToken, ct);
 
-        if (refreshTokenEntry != null) return false;
+        if (refreshTokenEntry is null) return false;
 
         refreshTokenEntry!.IsRevoked = true;
         
-        return  await SaveChangesAsync(ct) > 0;
+        return await SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task<int> DeleteRefreshTokensAsync(CancellationToken ct)
+    {
+        return await RefreshTokens.Where(x => x.IsRevoked || x.ExpiresOn < DateTime.UtcNow).ExecuteDeleteAsync(ct);
     }
 }

@@ -1,5 +1,6 @@
 using System.Net;
 using AuthenticationAPI.Models.Common;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthenticationAPI.Extensions;
@@ -18,6 +19,16 @@ public static class ApiResultExtensions
         return result.IsSuccess ? 
             new OkObjectResult(result.Data) :
             new ObjectResult(GetProblemDetails(result.Error!));
+    }
+
+    public static IActionResult MatchValidationError(this ValidationResult validationResult)
+    {
+        return new BadRequestObjectResult(new ValidationProblemDetails(validationResult.ToDictionary())
+        {
+            Status = (int)HttpStatusCode.BadRequest,
+            Title = "Invalid payload.",
+            Detail = "One or more validation errors occurred."
+        });
     }
 
     private static ProblemDetails GetProblemDetails(Error error)

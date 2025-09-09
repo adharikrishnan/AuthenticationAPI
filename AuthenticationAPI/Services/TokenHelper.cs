@@ -4,20 +4,22 @@ using System.Security.Cryptography;
 using System.Text;
 using AuthenticationAPI.Models.Configurations;
 using AuthenticationAPI.Models.Dtos;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthenticationAPI.Services;
 
-public class TokenHelper(AuthConfiguration authConfiguration) : ITokenHelper
+public class TokenHelper(IOptions<AuthConfiguration> authConfiguration) : ITokenHelper
 { 
+    private readonly AuthConfiguration _authConfiguration = authConfiguration.Value;
     
     private (string Token, DateTime Expiry) GenerateTokenAndExpiry()
     {
         string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         DateTime expiry = DateTime.UtcNow
-            .AddDays(authConfiguration.RefreshTokenConfig.ExpiryDays)
-            .AddHours(authConfiguration.RefreshTokenConfig.ExpiryHours)
-            .AddMinutes(authConfiguration.RefreshTokenConfig.ExpiryMinutes);
+            .AddDays(_authConfiguration.RefreshTokenConfig.ExpiryDays)
+            .AddHours(_authConfiguration.RefreshTokenConfig.ExpiryHours)
+            .AddMinutes(_authConfiguration.RefreshTokenConfig.ExpiryMinutes);
 
         return (token, expiry);
     }
@@ -30,15 +32,15 @@ public class TokenHelper(AuthConfiguration authConfiguration) : ITokenHelper
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authConfiguration.SecretKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authConfiguration.SecretKey));
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        DateTime expiry = DateTime.UtcNow.AddMinutes(authConfiguration.TokenExpiryMinutes);
+        DateTime expiry = DateTime.UtcNow.AddMinutes(_authConfiguration.TokenExpiryMinutes);
 
         var tokenObj = new JwtSecurityToken(
-            issuer: authConfiguration.Issuer,
-            audience: authConfiguration.Audience,
+            issuer: _authConfiguration.Issuer,
+            audience: _authConfiguration.Audience,
             claims: claims,
             expires: expiry,
             signingCredentials: creds

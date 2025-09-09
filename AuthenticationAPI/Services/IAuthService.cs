@@ -14,4 +14,6 @@ public interface IAuthService
     Task<Result<TokenResponse>> HandleRefreshTokenRequest(RefreshTokenRequest request, CancellationToken ct);
     
     Task<Result> RevokeRefreshToken(RefreshTokenRequest request, CancellationToken ct);
+    
+    Task<int> DeleteInvalidRefreshTokensAsync(CancellationToken ct);
 }

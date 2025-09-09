@@ -14,7 +14,7 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
         if (await dbContext.UserExistsAsync(request.Username.Trim(), ct))
         {
             return new Result
-                ("USER_EXISTS", "User already exists", ErrorType.Conflict);
+                ("USER_EXISTS", "User already exists.", ErrorType.Conflict);
         }
         string hashedPassword = passwordHelper.HashPassword(request.Password);
         
@@ -29,12 +29,12 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
 
         if (user is null)
             return new Result<TokenResponse>
-                ("USER_NOT_FOUND", "User does not exist", ErrorType.NotFound);
+                ("USER_NOT_FOUND", "User does not exist.", ErrorType.NotFound);
 
 
         if (!passwordHelper.VerifyPassword(user!.PasswordHash, request.Password))
             return new Result<TokenResponse>
-                ("INVALID_PASSWORD" ,"Invalid Credentials", ErrorType.Unauthorized);
+                ("INVALID_PASSWORD" ,"Invalid Credentials.", ErrorType.Unauthorized);
         
         var refreshTokenDto = tokenHelper.GenerateRefreshToken();
         refreshTokenDto.UserId = user.UserId;
@@ -53,7 +53,7 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
         if (refreshTokenDto is null || refreshTokenDto.ExpiryOn < DateTime.UtcNow || refreshTokenDto.IsRevoked)
         {
             return new Result<TokenResponse>
-                ("INVALID_REFRESH_TOKEN", "Invalid Token", ErrorType.Unauthorized);
+                ("INVALID_REFRESH_TOKEN", "Invalid Token.", ErrorType.Unauthorized);
         }
         
         tokenHelper.UpdateRefreshToken(refreshTokenDto);
@@ -71,8 +71,13 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
         
         if(!revoked)
             return new Result
-                ("INVALID_REFRESH_TOKEN", "Refresh Token is invalid", ErrorType.NotFound);
+                ("INVALID_REFRESH_TOKEN", "Refresh Token is invalid.", ErrorType.NotFound);
 
         return new Result();
+    }
+
+    public async Task<int> DeleteInvalidRefreshTokensAsync(CancellationToken ct)
+    {
+        return await dbContext.DeleteRefreshTokensAsync(ct);
     }
 }
