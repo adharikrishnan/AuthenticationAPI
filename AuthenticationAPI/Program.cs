@@ -1,6 +1,7 @@
 using AuthenticationAPI.Exceptions;
 using AuthenticationAPI.Extensions;
 using FluentValidation;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,7 @@ builder.Services.SetupBackgroundServices();
 builder.Services.SetupConfigurations(builder.Configuration);
 builder.Services.SetupServices();
 builder.Services.ConfigureAuthentication();
+builder.SetupSerilog();
 
 var app = builder.Build();
 
@@ -23,6 +25,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseSerilogRequestLogging();
 app.UseMiddleware<GlobalExceptionHandler>();
 app.UseRouting();
 app.UseAuthentication();

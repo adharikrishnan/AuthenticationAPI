@@ -1,0 +1,17 @@
+name: AuthenticationAPI
+services:
+  authentication-api: 
+    image: authentication-api:1.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 5001
+    volumes:
+      - authdb-volume:/app/Database
+    restart: unless-stopped
+volumes:
+  authdb-volume:
