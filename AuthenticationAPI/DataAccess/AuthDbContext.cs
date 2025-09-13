@@ -15,6 +15,26 @@ public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AuthDbContext).Assembly);
+
+        // adds a default admin user as the first user for testing purposes
+        // not something to be used in production, just adding this for convenience
+        // TODO: Create secure user creation and management process systematically
+        // Username is admin
+        // Password is "admin@2025"
+        modelBuilder.Entity<User>().HasData(
+            new User
+            {
+                Id = 1,
+                Username = "admin",
+                Email = null,
+                PasswordHash = "AQAAAAIAAYagAAAAEBFIfNPAOhEACrN97HkZI+2OUGGh/3Iaj/jhgBWBtD3wg33TeLw34dzgaJLIxjhfqw==", // admin@2025
+                RoleId = (int)RoleType.Admin,
+                CreatedAt = new DateTime(2025, 8, 29, 12, 30, 0, 0, DateTimeKind.Utc),
+                CreatedBy = "System",
+                UpdatedAt = new DateTime(2025, 8, 29, 12, 30, 0, 0, DateTimeKind.Utc),
+                UpdatedBy = "System"
+            });
+
         base.OnModelCreating(modelBuilder);
     }
 

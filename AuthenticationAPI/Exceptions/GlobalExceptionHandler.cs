@@ -24,7 +24,7 @@ internal sealed class GlobalExceptionHandler(RequestDelegate next, ILogger<Globa
             {
                 Title = "An unexpected error occured.",
                 Status = StatusCodes.Status500InternalServerError,
-                Detail = "An unexpected error occured. Please contact support with this Id" + context.TraceIdentifier,
+                Detail = $"An unexpected error occured. Please contact support with this Id: {context.TraceIdentifier}",
             };
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(problem)).ConfigureAwait(false);

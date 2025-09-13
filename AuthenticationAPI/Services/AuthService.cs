@@ -7,7 +7,11 @@ using AuthenticationAPI.Models.Response;
 
 namespace AuthenticationAPI.Services;
 
-public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPasswordHelper passwordHelper) : IAuthService
+public class AuthService(
+    ILogger<AuthService> logger,
+    AuthDbContext dbContext,
+    ITokenHelper tokenHelper,
+    IPasswordHelper passwordHelper) : IAuthService
 {
     public async Task<Result> RegisterUserAsync(AddUserRequest request, CancellationToken ct)
     {
@@ -79,5 +83,18 @@ public class AuthService(AuthDbContext dbContext, ITokenHelper tokenHelper, IPas
     public async Task<int> DeleteInvalidRefreshTokensAsync(CancellationToken ct)
     {
         return await dbContext.DeleteRefreshTokensAsync(ct);
+    }
+
+    public bool CheckDbConnection()
+    {
+        try
+        {
+            return dbContext.Database.CanConnect();
+        }
+        catch(Exception ex)
+        {
+            logger.LogError(ex, "Database connection failed. Reason: {message}", ex.Message);
+            return false;
+        }
     }
 }

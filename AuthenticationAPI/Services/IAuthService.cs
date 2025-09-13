@@ -7,6 +7,7 @@ namespace AuthenticationAPI.Services;
 
 public interface IAuthService
 {
+
     Task<Result> RegisterUserAsync(AddUserRequest request, CancellationToken ct);
 
     Task<Result<TokenResponse>> HandleTokenRequest(TokenRequest request, CancellationToken ct);
@@ -16,4 +17,6 @@ public interface IAuthService
     Task<Result> RevokeRefreshToken(RefreshTokenRequest request, CancellationToken ct);
     
     Task<int> DeleteInvalidRefreshTokensAsync(CancellationToken ct);
+    
+    bool CheckDbConnection();
 }

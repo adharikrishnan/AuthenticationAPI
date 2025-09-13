@@ -1,9 +1,9 @@
 using AuthenticationAPI.Extensions;
 using AuthenticationAPI.Models.Requests;
 using AuthenticationAPI.Services;
+using AuthenticationAPI.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using IValidatorFactory = AuthenticationAPI.Validators.IValidatorFactory;
 
 namespace AuthenticationAPI.Controllers
 {
@@ -60,5 +60,13 @@ namespace AuthenticationAPI.Controllers
             var result = await authService.RevokeRefreshToken(request, ct);
             return result.MatchApiResponse("Refresh Token Revoked.");
         }
+
+        [HttpGet("HealthCheck")]
+        public IActionResult HealthCheck()
+        {
+            bool dbConnectionStatus =  authService.CheckDbConnection();
+            return Ok($"Service is running. Database connection status: " + (dbConnectionStatus ? "Connected" : "Not Connected"));
+        }
+
     }
 }
